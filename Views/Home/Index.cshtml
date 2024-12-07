@@ -1,8 +1,26 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1 class="text-center my-4">MobSecLab</h1>
+
+<!-- Neden MobSecLab Kullanmalıyız? Başlığı -->
+<section class="my-5">
+    <h2 class="text-center">Neden MobSecLab Kullanmalıyız?</h2>
+    <div class="row mt-4">
+        <!-- İlk Resim ve Alt Başlık -->
+        <div class="col-md-6 text-center">
+            <img src="/images/index_image_1.png" alt="Güvenilirlik" class="responsive-img mb-3">
+            <h3>Güvenilirlik</h3>
+            <p>MobSecLab, verilerinizi güvenle analiz eder ve en doğru sonuçları sağlar. Gelişmiş API entegrasyonu ile zafiyetlerinizi kolayca tespit edebilirsiniz.</p>
+        </div>
+        <!-- İkinci Resim ve Alt Başlık -->
+        <div class="col-md-6 text-center">
+            <img src="/images/index_image_2.png" alt="Kullanım Kolaylığı" class="responsive-img mb-3">
+            <h3>Kullanım Kolaylığı</h3>
+            <p>Kullanıcı dostu arayüzümüz, her yaştan kullanıcıya basit ve hızlı bir deneyim sunar.</p>
+        </div>
+        <a class="btn btn-success mt-3 w-100" href="/Auth/Register">Hesabınız Yoksa Kayıt Olmak İçin </a>
+        <a class="btn btn-primary mt-3 w-100" href="/Auth/Login">Hesabınız Zaten Varsa Giriş Yapmak İçin</a>
+    </div>
+</section>

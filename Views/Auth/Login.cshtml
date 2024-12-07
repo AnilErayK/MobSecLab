@@ -1,14 +1,18 @@
-<h2>Giriş Yap</h2>
+@{
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<h2 class="text-center">Giriş Yap</h2>
 <form method="post">
-    <div>
-        <label>Kullanıcı Adı:</label>
-        <input type="text" name="username" required />
+    <div class="form-group">
+        <label for="username">Kullanıcı Adı:</label>
+        <input type="text" id="username" name="username" class="form-control" required />
     </div>
-    <div>
-        <label>Şifre:</label>
-        <input type="password" name="password" required />
+    <div class="form-group mt-3">
+        <label for="password">Şifre:</label>
+        <input type="password" id="password" name="password" class="form-control" required />
     </div>
-    <button type="submit">Giriş Yap</button>
+    <button type="submit" class="btn btn-primary mt-3 w-100">Giriş Yap</button>
 </form>
-<p style="color:red;">@ViewBag.Error</p>
-<a href="/Auth/Register">Kayıt Ol</a>
+<a class="btn btn-success mt-3 w-100" href="/Auth/Register">Hesabınız Yoksa Kayıt Olmak İçin </a>
+
