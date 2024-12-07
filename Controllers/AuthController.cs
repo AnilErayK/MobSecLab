@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MobSecLab.Models;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 using System.Linq;
 
 namespace MobSecLab.Controllers
@@ -24,7 +26,12 @@ namespace MobSecLab.Controllers
             var user = _context.Users.SingleOrDefault(u => u.Username == username && u.Password == password);
             if (user != null)
             {
-                return RedirectToAction("Index", "Home");
+                var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
+                var identity = new ClaimsIdentity(claims, "CookieAuth");
+                var principal = new ClaimsPrincipal(identity);
+                HttpContext.SignInAsync("CookieAuth", principal);
+
+                return RedirectToAction("Dashboard", "Profile");
             }
             ViewBag.Error = "Geçersiz giriş bilgileri!";
             return View();
@@ -42,9 +49,23 @@ namespace MobSecLab.Controllers
             {
                 _context.Users.Add(user);
                 _context.SaveChanges();
-                return RedirectToAction("Login");
+
+                var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username) };
+                var identity = new ClaimsIdentity(claims, "CookieAuth");
+                var principal = new ClaimsPrincipal(identity);
+                HttpContext.SignInAsync("CookieAuth", principal);
+
+                return RedirectToAction("Dashboard", "Profile");
             }
             return View(user);
         }
+
+        [HttpPost]
+        public IActionResult Logout()
+        {
+            HttpContext.SignOutAsync("CookieAuth");
+            return RedirectToAction("Login", "Auth");
+        }
+
     }
 }

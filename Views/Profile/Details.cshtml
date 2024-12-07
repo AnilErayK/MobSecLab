@@ -1,0 +1,17 @@
+@{
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<h2 class="text-center">Profilim</h2>
+<hr />
+
+<!-- Kullanıcı Bilgileri -->
+<div class="card">
+    <div class="card-body">
+        <h4>Kullanıcı Bilgileri</h4>
+        <p><strong>Kullanıcı Adı:</strong> @Model.Username</p>
+        <p><strong>Kullanıcı ID:</strong> @Model.UserNo</p>
+        <a href="/Profile/ChangePassword" class="btn btn-primary mt-3">Şifre Değiştir</a>
+        <a href="/Profile/LogoutConfirmation" class="btn btn-danger mt-3">Çıkış Yap</a>
+    </div>
+</div>
