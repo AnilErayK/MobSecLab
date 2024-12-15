@@ -4,6 +4,10 @@
 
 <h2 class="text-center">Kayıt Ol</h2>
 <form method="post">
+@if (!string.IsNullOrEmpty(ViewBag.Error))
+{
+    <div class="alert alert-danger text-center">@ViewBag.Error</div>
+}
     <div class="form-group">
         <label for="username">Kullanıcı Adı:</label>
         <input type="text" id="username" name="Username" class="form-control" required />
@@ -14,4 +18,5 @@
     </div>
     <button type="submit" class="btn btn-success mt-3 w-100">Kayıt Ol</button>
 </form>
+
 <a class="btn btn-primary mt-3 w-100" href="/Auth/Login">Hesabınız Zaten Varsa Giriş Yapmak İçin</a>

@@ -1,0 +1,17 @@
+@{
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<h2>Dosya Yükle</h2>
+
+@if(ViewBag.Error != null){
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post" enctype="multipart/form-data" action="/File/UploadPost">
+    <div class="form-group">
+        <label for="fileInput">Dosya Seç:</label>
+        <input type="file" name="file" class="form-control" id="fileInput" required />
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Yükle</button>
+</form>

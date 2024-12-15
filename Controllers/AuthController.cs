@@ -45,6 +45,13 @@ namespace MobSecLab.Controllers
         [HttpPost]
         public IActionResult Register(User user)
         {
+            // Kullanıcı adı benzersizlik kontrolü
+            if (_context.Users.Any(u => u.Username == user.Username))
+            {
+                ViewBag.Error = "Bu kullanıcı adı zaten alınmış. Lütfen başka bir kullanıcı adı seçin.";
+                return View(user);
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Users.Add(user);
