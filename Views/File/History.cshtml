@@ -1,0 +1,34 @@
+@model List<MobSecLab.Models.FileEntity>
+
+@{
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<h2>Önceden Tarattığınız Dosyalar</h2>
+
+@if(Model == null || !Model.Any())
+{
+    <p>Henüz tarattığınız bir dosya bulunmuyor.</p>
+}
+else
+{
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Dosya İsmi</th>
+                <th>MD5 Hash</th>
+                <th>File Seq</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var file in Model)
+        {
+            <tr>
+                <td>@file.File_Name</td>
+                <td>@file.File_md5</td>
+                <td>@file.FileSeq</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

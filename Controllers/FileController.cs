@@ -71,8 +71,10 @@ namespace MobSecLab.Controllers
                         using (JsonDocument doc = JsonDocument.Parse(respStr))
                         {
                             var hash = doc.RootElement.GetProperty("hash").GetString();
-                            // AnalysisId'yi Session'a kaydediyoruz
+                            // AnalysisId ve UploadedFileName'i Session'a kaydet
                             HttpContext.Session.SetString("AnalysisId", hash);
+                            HttpContext.Session.SetString("UploadedFileName", file.FileName);
+
                             ViewBag.Message = "Dosya yüklendi. Taramayı başlatmak için aşağıdaki butona tıklayın.";
                             return View("Result");
                         }
@@ -84,6 +86,78 @@ namespace MobSecLab.Controllers
                         return View("Upload");
                     }
                 }
+            }
+        }
+
+        // Bu metot sadece Scan işleminden sonra çağrılır, public veya private yapınıza göre düzenleyebilirsiniz.
+        private async Task<IActionResult> GetJsonResult(string analysisId)
+        {
+            var apiBaseUrl = _configuration["MobSF:ApiBaseUrl"];
+            var apiKey = _configuration["MobSF:ApiKey"];
+
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.Add("X-Mobsf-Api-Key", apiKey);
+
+            var formContent = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("hash", analysisId)
+            });
+
+            var response = await client.PostAsync($"{apiBaseUrl}/report_json", formContent);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonStr = await response.Content.ReadAsStringAsync();
+                using (var doc = JsonDocument.Parse(jsonStr))
+                {
+                    var fileMd5 = FindLastHash(doc.RootElement);
+
+                    if (fileMd5 == null)
+                    {
+                        ViewBag.Error = "JSON içinde hiçbir 'hash' alanı bulunamadı. Yanıt: " + jsonStr;
+                        return View("Result");
+                    }
+
+                    var username = User.Identity.Name;
+                    var currentUser = _context.Users.FirstOrDefault(u => u.Username == username);
+                    if (currentUser == null)
+                    {
+                        ViewBag.Error = "Kullanıcı bulunamadı.";
+                        return View("Result");
+                    }
+
+                    var userNo = currentUser.UserNo;
+                    var fileName = HttpContext.Session.GetString("UploadedFileName");
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        ViewBag.Error = "Dosya ismi bulunamadı. Lütfen dosya yükleme adımını kontrol edin.";
+                        return View("Result");
+                    }
+
+                    var fileSeq = CalculateFileSeq(fileMd5);
+
+                    var newFile = new FileEntity
+                    {
+                        UserNo = userNo,
+                        FileSeq = fileSeq,
+                        File_Name = fileName,
+                        File_md5 = fileMd5
+                    };
+
+                    _context.Files.Add(newFile);
+                    _context.SaveChanges();
+
+                    ViewBag.Message = "JSON raporu alındı ve veritabanına kaydedildi. MD5: " + fileMd5;
+                }
+
+                return View("Result");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                ViewBag.Error = "JSON raporu alınamadı: " + error;
+                return View("Result");
             }
         }
 
@@ -114,70 +188,15 @@ namespace MobSecLab.Controllers
             if (response.IsSuccessStatusCode)
             {
                 ViewBag.Message = "Tarama başlatıldı. Lütfen bekleyin...";
-                Thread.Sleep(60000); // bekleme, gerçek scenaryoda asenkron iyileştirilir
+                Thread.Sleep(60000); // Bekleme, gerçek senaryoda asenkron iyileştirilmeli.
 
-                // Bekledik, şimdi JSON sonuç dosyasını alalım:
+                // Bekledikten sonra JSON sonuçlarını çek
                 return await GetJsonResult(analysisId);
             }
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
                 ViewBag.Error = "Tarama başlatılamadı: " + error;
-                return View("Result");
-            }
-        }
-
-        private async Task<IActionResult> GetJsonResult(string analysisId)
-        {
-            var apiBaseUrl = _configuration["MobSF:ApiBaseUrl"];
-            var apiKey = _configuration["MobSF:ApiKey"];
-
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Clear();
-            client.DefaultRequestHeaders.Add("X-Mobsf-Api-Key", apiKey);
-
-            var formContent = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("hash", analysisId)
-            });
-
-            // Endpointi 'json_report' yerine 'report_json' olarak güncelliyoruz.
-            var response = await client.PostAsync($"{apiBaseUrl}/report_json", formContent);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var jsonStr = await response.Content.ReadAsStringAsync();
-                using (var doc = JsonDocument.Parse(jsonStr))
-                {
-                    var fileMd5 = doc.RootElement.GetProperty("hash").GetString();
-
-                    var username = User.Identity.Name;
-                    var currentUser = _context.Users.FirstOrDefault(u => u.Username == username);
-                    var userNo = currentUser.UserNo;
-
-                    var fileName = HttpContext.Session.GetString("UploadedFileName");
-
-                    var fileSeq = CalculateFileSeq(fileMd5);
-
-                    var newFile = new FileEntity
-                    {
-                        UserNo = userNo,
-                        FileSeq = fileSeq,
-                        File_Name = fileName,
-                        File_md5 = fileMd5
-                    };
-
-                    _context.Files.Add(newFile);
-                    _context.SaveChanges();
-
-                    ViewBag.Message = "JSON raporu alındı ve veritabanına kaydedildi. MD5: " + fileMd5;
-                }
-                return View("Result");
-            }
-            else
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                ViewBag.Error = "JSON raporu alınamadı: " + error;
                 return View("Result");
             }
         }
@@ -196,6 +215,54 @@ namespace MobSecLab.Controllers
             {
                 return existingFile.FileSeq;
             }
+        }
+
+        private string FindLastHash(JsonElement element)
+        {
+            string lastHash = null;
+
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.Object:
+                    // Nesne ise tüm property'leri tara
+                    foreach (var prop in element.EnumerateObject())
+                    {
+                        if (prop.Name == "hash")
+                        {
+                            // hash bulundu, bunu son bulunan hash olarak kaydet
+                            lastHash = prop.Value.GetString();
+                        }
+                        else
+                        {
+                            // Bu property'nin değeri de karmaşık olabilir,
+                            // tekrar recursion yapıyoruz
+                            var result = FindLastHash(prop.Value);
+                            if (result != null)
+                            {
+                                lastHash = result;
+                            }
+                        }
+                    }
+                    break;
+
+                case JsonValueKind.Array:
+                    // Array ise tüm elemanları tara
+                    foreach (var arrElem in element.EnumerateArray())
+                    {
+                        var result = FindLastHash(arrElem);
+                        if (result != null)
+                        {
+                            lastHash = result;
+                        }
+                    }
+                    break;
+
+                // Diğer durumlarda (string, number, null) alt property yok
+                default:
+                    break;
+            }
+
+            return lastHash;
         }
 
 
@@ -238,9 +305,20 @@ namespace MobSecLab.Controllers
         [HttpGet]
         public IActionResult History()
         {
-            // Burada önceki analizleri listeleme gibi bir özellik ekleyebilirsiniz.
-            return Content("Daha önce yüklenen dosyalar burada listelenecek.");
-        }
+            var username = User.Identity.Name;
+            var currentUser = _context.Users.FirstOrDefault(u => u.Username == username);
+            if (currentUser == null)
+            {
+                ViewBag.Error = "Kullanıcı bulunamadı.";
+                return View("Result");
+            }
 
+            var userNo = currentUser.UserNo;
+            // Bu kullanıcının tüm dosyalarını çekiyoruz
+            var userFiles = _context.Files.Where(f => f.UserNo == userNo).ToList();
+
+            // History view'ına dosyaların listesini model olarak geçiyoruz.
+            return View("History", userFiles);
+        }
     }
 }
