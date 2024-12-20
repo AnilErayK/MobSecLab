@@ -1,0 +1,44 @@
+@model List<MobSecLab.Models.Results>
+
+@{
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<h2>Önceden Tarattığınız Dosya Sonuçları</h2>
+
+@if(Model == null || !Model.Any())
+{
+    <p>Henüz analiz sonuçlarınız bulunmuyor.</p>
+}
+else
+{
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Dosya İsmi</th>
+                <th>MD5</th>
+                <th>TotalMalwarePermission</th>
+                <th>TotalPermission</th>
+                <th>SeverityHigh</th>
+                <th>StatusDangerous</th>
+                <th>minSdk</th>
+                <th>SecurityScore</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var res in Model)
+        {
+            <tr>
+                <td>@res.File_Name</td>
+                <td>@res.md5</td>
+                <td>@res.TotalMalwarePermission</td>
+                <td>@res.TotalPermission</td>
+                <td>@res.SeverityHigh</td>
+                <td>@res.StatusDangerous</td>
+                <td>@res.minSdk</td>
+                <td>@res.SecurityScore</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

@@ -2,36 +2,62 @@
     Layout = "~/Views/Shared/_ProfileLayout.cshtml";
 }
 
-<h2>Sonuç</h2>
+<h2>Analiz Sonucu</h2>
 
 @if(ViewBag.Error != null)
 {
     <div class="alert alert-danger">@ViewBag.Error</div>
 }
-
-@if(ViewBag.Message != null)
+else if(ViewBag.FileMd5 != null)
+{
+    <div class="card mt-3">
+        <div class="card-header bg-primary text-white">Analiz Özeti</div>
+        <div class="card-body">
+            <h5 class="card-title">Dosya: @ViewBag.FileName</h5>
+            <table class="table table-bordered table-hover mt-4">
+                <tbody>
+                    <tr>
+                        <th>Dosyanın MD5 Değeri</th>
+                        <td>@ViewBag.FileMd5</td>
+                    </tr>
+                    <tr>
+                        <th>Toplam Zararlı İzin Sayısı (Malware Permission):</th>
+                        <td>@ViewBag.TotalMalware</td>
+                    </tr>
+                    <tr>
+                        <th>Toplam İzin Sayısı:</th>
+                        <td>@ViewBag.TotalPermission</td>
+                    </tr>
+                    <tr>
+                        <th>Yüksek Ciddiyetli Zafiyet (SeverityHigh):</th>
+                        <td>@ViewBag.SeverityHigh</td>
+                    </tr>
+                    <tr>
+                        <th>Çok Tehlikeli İzin Sayısı (StatusDangerous):</th>
+                        <td>@ViewBag.StatusDangerous</td>
+                    </tr>
+                    <tr>
+                        <th>Minimum SDK (minSdk):</th>
+                        <td>@ViewBag.MinSdk</td>
+                    </tr>
+                    <tr>
+                        <th>Güvenlik Skoru (SecurityScore):</th>
+                        <td>@ViewBag.SecurityScore</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else if(ViewBag.Message != null)
 {
     <div class="alert alert-info">@ViewBag.Message</div>
-}
-
-<!-- Burada AnalysisId Session'da saklandığı için tekrar read yapmaya gerek yok.
-     Eğer tarama başlatılmadıysa "Tarama Başlat" butonu, 
-     tarama bittiyse "PDF Raporunu İndir" butonu gösterebilirsiniz.
-
-     Basit bir mantık: Eğer mesaj "başlatmak için tıklayın" içeriyorsa tarama butonu,
-     "Raporu indirebilirsiniz" içeriyorsa indir butonu gösterilir.
--->
-
-@if(ViewBag.Message != null && ViewBag.Message.ToString().Contains("başlatmak"))
-{
+    <!-- Tarama başlatma butonu -->
     <form method="post" action="/File/Scan">
-        <button type="submit" class="btn btn-warning">Taramayı Başlat</button>
+        <button type="submit" class="btn btn-warning mt-3">Taramayı Başlat</button>
     </form>
 }
-
-@if(ViewBag.Message != null && ViewBag.Message.ToString().Contains("Raporu indirebilirsiniz"))
+else
 {
-    <a href="/File/Download" class="btn btn-success mt-3">PDF Raporunu İndir</a>
+    <div class="alert alert-info">Henüz bir analiz yapılmadı.</div>
 }
-
-<a href="/File/Upload" class="btn btn-link mt-3">Yeni Dosya Yükle</a>

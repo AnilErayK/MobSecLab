@@ -5,7 +5,6 @@ using MobSecLab.Models;
 using System;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
@@ -90,7 +89,7 @@ namespace MobSecLab.Controllers
         }
 
         // Bu metot sadece Scan işleminden sonra çağrılır, public veya private yapınıza göre düzenleyebilirsiniz.
-        private async Task<IActionResult> GetJsonResult(string analysisId)
+          private async Task<IActionResult> GetJsonResult(string analysisId)
         {
             var apiBaseUrl = _configuration["MobSF:ApiBaseUrl"];
             var apiKey = _configuration["MobSF:ApiKey"];
@@ -137,6 +136,43 @@ namespace MobSecLab.Controllers
 
                     var fileSeq = CalculateFileSeq(fileMd5);
 
+                    // total_malware_permissions
+                    int totalMalware = 0;
+                    var totalMalwareStr = FindPropertyValue(doc.RootElement, "total_malware_permissions");
+                    if (!string.IsNullOrEmpty(totalMalwareStr) && int.TryParse(totalMalwareStr, out int tmVal))
+                    {
+                        totalMalware = tmVal;
+                    }
+
+                    // total_other_permissions
+                    int totalOther = 0;
+                    var totalOtherStr = FindPropertyValue(doc.RootElement, "total_other_permissions");
+                    if (!string.IsNullOrEmpty(totalOtherStr) && int.TryParse(totalOtherStr, out int toVal))
+                    {
+                        totalOther = toVal;
+                    }
+
+                    int totalPermission = totalMalware + totalOther;
+
+                    // min_sdk
+                    var minSdk = FindPropertyValue(doc.RootElement, "min_sdk");
+                    if (string.IsNullOrEmpty(minSdk)) 
+                        minSdk = "Bilinmiyor";
+
+                    // security_score
+                    int securityScore = 0;
+                    var securityScoreStr = FindPropertyValue(doc.RootElement, "security_score");
+                    if (!string.IsNullOrEmpty(securityScoreStr) && int.TryParse(securityScoreStr, out int ssVal))
+                    {
+                        securityScore = ssVal;
+                    }
+
+                    // severity: "high" sayısı
+                    int severityHighCount = CountOccurrences(jsonStr, "\"severity\": \"high\"");
+                    // status: "dangerous" sayısı
+                    int statusDangerousCount = CountOccurrences(jsonStr, "\"status\": \"dangerous\"");
+
+                    // Files tablosuna kaydet
                     var newFile = new FileEntity
                     {
                         UserNo = userNo,
@@ -144,11 +180,37 @@ namespace MobSecLab.Controllers
                         File_Name = fileName,
                         File_md5 = fileMd5
                     };
-
                     _context.Files.Add(newFile);
                     _context.SaveChanges();
 
-                    ViewBag.Message = "JSON raporu alındı ve veritabanına kaydedildi. MD5: " + fileMd5;
+                    // Results tablosuna kaydet
+                    var newResult = new Models.Results
+                    {
+                        FileSeq = fileSeq,
+                        md5 = fileMd5,
+                        File_Name = fileName,
+                        UserNo = userNo,
+                        TotalMalwarePermission = totalMalware,
+                        TotalPermission = totalPermission,
+                        SeverityHigh = severityHighCount,
+                        StatusDangerous = statusDangerousCount,
+                        minSdk = minSdk,
+                        SecurityScore = securityScore
+                    };
+                    _context.Results.Add(newResult);
+                    _context.SaveChanges();
+
+                    // ViewBag üzerinden kullanıcıya göstereceğimiz veriler
+                    ViewBag.FileName = fileName;
+                    ViewBag.FileMd5 = fileMd5;
+                    ViewBag.TotalMalware = totalMalware;
+                    ViewBag.TotalPermission = totalPermission;
+                    ViewBag.SeverityHigh = severityHighCount;
+                    ViewBag.StatusDangerous = statusDangerousCount;
+                    ViewBag.MinSdk = minSdk;
+                    ViewBag.SecurityScore = securityScore;
+
+                    ViewBag.Message = "Analiz tamamlandı.";
                 }
 
                 return View("Result");
@@ -160,6 +222,62 @@ namespace MobSecLab.Controllers
                 return View("Result");
             }
         }
+
+        private int CountOccurrences(string source, string substring)
+        {
+            int count = 0;
+            int index = 0;
+            while ((index = source.IndexOf(substring, index, StringComparison.OrdinalIgnoreCase)) != -1)
+            {
+                count++;
+                index += substring.Length;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Bu metot JSON içinde belirtilen property'yi derinlemesine arar ve ilk bulduğu değeri string olarak döndürür.
+        /// Eğer property bulunamazsa null döner.
+        /// </summary>
+        private string FindPropertyValue(JsonElement element, string propertyName)
+        {
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.Object:
+                    foreach (var prop in element.EnumerateObject())
+                    {
+                        if (prop.NameEquals(propertyName))
+                        {
+                            // Değerin tipine göre string olarak al
+                            // number ise getint32().ToString(), string ise directly .GetString()
+                            // JSON ne döndürüyorsa...
+                            if (prop.Value.ValueKind == JsonValueKind.Number)
+                                return prop.Value.GetRawText(); // numarayı string'e çevirir
+                            else if (prop.Value.ValueKind == JsonValueKind.String)
+                                return prop.Value.GetString();
+                            else
+                                return prop.Value.GetRawText();
+                        }
+                        else
+                        {
+                            var result = FindPropertyValue(prop.Value, propertyName);
+                            if (result != null)
+                                return result;
+                        }
+                    }
+                    break;
+                case JsonValueKind.Array:
+                    foreach (var item in element.EnumerateArray())
+                    {
+                        var result = FindPropertyValue(item, propertyName);
+                        if (result != null)
+                            return result;
+                    }
+                    break;
+            }
+            return null;
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Scan()
@@ -303,7 +421,7 @@ namespace MobSecLab.Controllers
         }
 
         [HttpGet]
-        public IActionResult History()
+        public IActionResult ResultsHistory()
         {
             var username = User.Identity.Name;
             var currentUser = _context.Users.FirstOrDefault(u => u.Username == username);
@@ -314,11 +432,10 @@ namespace MobSecLab.Controllers
             }
 
             var userNo = currentUser.UserNo;
-            // Bu kullanıcının tüm dosyalarını çekiyoruz
-            var userFiles = _context.Files.Where(f => f.UserNo == userNo).ToList();
+            var userResults = _context.Results.Where(r => r.UserNo == userNo).ToList();
 
-            // History view'ına dosyaların listesini model olarak geçiyoruz.
-            return View("History", userFiles);
+            return View("ResultsHistory", userResults);
         }
+
     }
 }

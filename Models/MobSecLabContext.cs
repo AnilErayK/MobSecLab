@@ -10,5 +10,8 @@ namespace MobSecLab.Models
 
         public DbSet<FileEntity> Files { get; set; }
 
+        public DbSet<Results> Results { get; set; }
+
+
     }
 }
