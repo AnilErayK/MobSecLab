@@ -43,7 +43,10 @@ namespace MobSecLab.Controllers
                 ViewBag.Error = "Lütfen bir dosya seçin.";
                 return View("Upload");
             }
-
+            else if(file.Length > 31457280){
+                ViewBag.Error = "Dosya boyutu 30 MB'ı aştı. Lütfen daha küçük bir dosya seçin.";
+                return View("Upload");
+            }
             var apiBaseUrl = _configuration["MobSF:ApiBaseUrl"];
             var apiKey = _configuration["MobSF:ApiKey"];
 
@@ -53,6 +56,7 @@ namespace MobSecLab.Controllers
                 var fileBytes = ms.ToArray();
 
                 var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromMinutes(10);
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Add("X-Mobsf-Api-Key", apiKey);
 
@@ -306,7 +310,7 @@ namespace MobSecLab.Controllers
             if (response.IsSuccessStatusCode)
             {
                 ViewBag.Message = "Tarama başlatıldı. Lütfen bekleyin...";
-                Thread.Sleep(60000); // Bekleme, gerçek senaryoda asenkron iyileştirilmeli.
+                 await Task.Delay(60000); // Bekleme, gerçek senaryoda asenkron iyileştirilmeli.
 
                 // Bekledikten sonra JSON sonuçlarını çek
                 return await GetJsonResult(analysisId);

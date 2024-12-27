@@ -2,6 +2,58 @@
     Layout = "~/Views/Shared/_ProfileLayout.cshtml";
 }
 
+<style>
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #3498db;
+        border-radius: 50%;
+        -webkit-animation: spinnerRotate 1s linear infinite;
+        animation: spinnerRotate 1s linear infinite;
+    }
+
+    .loading-text {
+        margin-top: 20px;
+        font-size: 18px;
+        color: #333;
+    }
+
+    @* Razor sözdizimi ile keyframes tanımlaması *@
+    @@-webkit-keyframes spinnerRotate {
+        0% { -webkit-transform: rotate(0deg); transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+    }
+
+    @@keyframes spinnerRotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+
+<div id="loadingOverlay" class="loading-overlay">
+    <div style="text-align: center;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Dosya analiz ediliyor, lütfen bekleyiniz...</div>
+    </div>
+</div>
+
+
+
 <h2>Analiz Sonucu</h2>
 
 @if(ViewBag.Error != null)
@@ -11,53 +63,202 @@
 else if(ViewBag.FileMd5 != null)
 {
     <div class="card mt-3">
-        <div class="card-header bg-primary text-white">Analiz Özeti</div>
+        <div class="card-header bg-primary text-white">Analiz Sonuçları</div>
         <div class="card-body">
             <h5 class="card-title">Dosya: @ViewBag.FileName</h5>
             <table class="table table-bordered table-hover mt-4">
+
                 <tbody>
                     <tr>
                         <th>Dosyanın MD5 Değeri</th>
                         <td>@ViewBag.FileMd5</td>
                     </tr>
                     <tr>
-                        <th>Toplam Zararlı İzin Sayısı (Malware Permission):</th>
+                        <td>MD5 Değeri card-header Dosyanın kendine özgü kimlik değeridir. MD5 değerini bildiğiniz bir dosya 
+                            istemimizde daha önce taratıldıysa analiz sonuçlarını görüntüleyebilirsiniz.</td>
+                        <td>Buraya Tıklayarak MD5 keyden sonuçlarını görme kısmı gidebilirsiniz</td>
+                    </tr>
+                    <tr>
+                        <th>Toplam Zararlı Yazılım İzin Sayısı (Malware Permission):</th>
                         <td>@ViewBag.TotalMalware</td>
+                    </tr>
+                    <tr>
+                        <td>Ortalama olarak 10'dan az olmalıdır</td>
+                        <td>
+                            @{
+                                if (ViewBag.TotalMalware < 10)
+                                {
+                                    @:<span class="text-success"><i class="fas fa-check-circle"></i></span> <!-- Yeşil tik -->
+                                }
+                                else if (ViewBag.TotalMalware < 26)
+                                {
+                                    @:<span class="text-warning"><i class="fas fa-exclamation-circle"></i></span> <!-- Sarı çizgi -->
+                                }
+                                else
+                                {
+                                    @:<span class="text-danger"><i class="fas fa-times-circle"></i></span> <!-- Kırmızı çarpı -->
+                                }
+                            }
+                        </td>
                     </tr>
                     <tr>
                         <th>Toplam İzin Sayısı:</th>
                         <td>@ViewBag.TotalPermission</td>
                     </tr>
                     <tr>
+                        <td>Ortalama olarak 50'den az olmalıdır</td>
+                        <td>
+                            @{
+                                if (ViewBag.TotalPermission < 50)
+                                {
+                                    @:<span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                }
+                                else if (ViewBag.TotalPermission < 71)
+                                {
+                                    @:<span class="text-warning"><i class="fas fa-exclamation-circle"></i></span>
+                                }
+                                else
+                                {
+                                    @:<span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                    <tr>
                         <th>Yüksek Ciddiyetli Zafiyet (SeverityHigh):</th>
                         <td>@ViewBag.SeverityHigh</td>
+                    </tr>
+                    <tr>
+                        <td>Ortalama olarak 1'den az olmalıdır</td>
+                        <td>
+                            @{
+                                if (ViewBag.SeverityHigh < 1)
+                                {
+                                    @:<span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                }
+                                else if (ViewBag.SeverityHigh < 2)
+                                {
+
+                                    @:<span class="text-warning"><i class="fas fa-exclamation-circle"></i></span>
+                                }
+                                else
+                                {
+                                    @:<span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                }
+                            }
+                        </td>
                     </tr>
                     <tr>
                         <th>Çok Tehlikeli İzin Sayısı (StatusDangerous):</th>
                         <td>@ViewBag.StatusDangerous</td>
                     </tr>
                     <tr>
+                        <td>Ortalama olarak 1'den az olmalıdır</td>
+                        <td>
+                            @{
+                                if (ViewBag.StatusDangerous < 1)
+                                {
+                                    @:<span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                }
+                                else if (ViewBag.StatusDangerous < 2)
+                                {
+                                    @:<span class="text-warning"><i class="fas fa-exclamation-circle"></i></span>
+                                }
+                                else
+                                {
+                                    @:<span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                    <tr>
                         <th>Minimum SDK (minSdk):</th>
                         <td>@ViewBag.MinSdk</td>
+                    </tr>
+                    <tr>
+                        <td>Ortalama olarak 29'dan yüksek olmalıdır yani minumum Android 10.0 ve Üzerinde çalışmalıdır.</td>
+                        <td>
+                            @{
+                                int minSdk = Convert.ToInt32(ViewBag.MinSdk); // ViewBag.MinSdk'i int'e çevir
+                                if (minSdk > 28)
+                                {
+                                    @:<span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                }
+                                else if (minSdk > 23)
+                                {
+                                    @:<span class="text-warning"><i class="fas fa-exclamation-circle"></i></span>
+                                }
+                                else
+                                {
+                                    @:<span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                }
+                            }
+                        </td>
                     </tr>
                     <tr>
                         <th>Güvenlik Skoru (SecurityScore):</th>
                         <td>@ViewBag.SecurityScore</td>
                     </tr>
+                    <tr>
+                        <td>Ortalama olarak 50'den yüksek olmalıdır</td>
+                        <td>
+                            @{
+                                if (ViewBag.SecurityScore > 50)
+                                {
+                                    @:<span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                }
+                                else if (ViewBag.SecurityScore > 50)
+                                {
+                                    @:<span class="text-warning"><i class="fas fa-exclamation-circle"></i></span>
+                                }
+                                else
+                                {
+                                    @:<span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                }
+                            }
+                        </td>
+                    </tr>        
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Uygulamayı İndirmeli Miyim</th>
+                        <td>
+                            @{
+                                if (ViewBag.SecurityScore > 49)
+                                {
+                                    @:<span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                }
+                                else if (ViewBag.SecurityScore > 44)
+                                {
+                                    @:<span class="text-warning"><i class="fas fa-exclamation-circle"></i></span>
+                                }
+                                else
+                                {
+                                    @:<span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
 }
 else if(ViewBag.Message != null)
 {
-    <div class="alert alert-info">@ViewBag.Message</div>
-    <!-- Tarama başlatma butonu -->
-    <form method="post" action="/File/Scan">
-        <button type="submit" class="btn btn-warning mt-3">Taramayı Başlat</button>
+<div class="alert alert-info">@ViewBag.Message</div>
+    <form method="post" action="/File/Scan" onsubmit="showLoading()">
+        <button type="submit" class="btn btn-warning mt-3" >Taramayı Başlat </button>
     </form>
 }
 else
 {
     <div class="alert alert-info">Henüz bir analiz yapılmadı.</div>
 }
+
+<script>
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    return true;
+}
+</script>

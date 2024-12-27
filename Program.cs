@@ -1,10 +1,28 @@
 using MobSecLab.Models; // DbContext için gerekli namespace
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Kestrel ile ilgili limitleri ayarlayalım
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // 500 MB olarak ayarladık, isterseniz daha da yükseltebilirsiniz (byte cinsinden)
+    options.Limits.MaxRequestBodySize = 500 * 1024 * 1024; 
+});
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    // Tek seferde kabul edilecek maximum "multipart" boyutu (örneğin 1 GB)
+    options.MultipartBodyLengthLimit = 1024L * 1024L * 1024L; 
+
+    // Gerekirse şu limitleri de artırabilirsiniz:
+    // options.ValueLengthLimit = int.MaxValue;
+    // options.MultipartHeadersLengthLimit = int.MaxValue;
+});
 
 // PostgreSQL bağlantısını ekle
 builder.Services.AddDbContext<MobSecLabContext>(options =>

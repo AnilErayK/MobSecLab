@@ -12,8 +12,19 @@
 }
 else
 {
-    <table class="table table-striped table-bordered">
-        <thead>
+    <table class="table table-striped table-bordered table-hover mt-4">
+        <thead class="thead-dark">
+            <tr>
+                <td>Uygulama isminde farklı olarak apk dosyasının ismidir.</td>
+                <td>Her dosyasının kendiğine özgü kimliğidir.</td>
+                <td>Toplam zararlı yazılım izin sayısıdır.</td>
+                <td>Toplam izin sayısıdır.</td>
+                <td>Yüksek ciddiyetli zafiyet sayısıdır.</td>
+                <td>Çok tehlikeli izin sayısıdır.</td>
+                <td>Android sürümleri için gerekli olan yazılımın sürümüdür.</td>
+                <td>Genel güvenlik skorudur.</td>
+                <td>Sistemimizin tavsiyesidir.</td>
+            </tr>
             <tr>
                 <th>Dosya İsmi</th>
                 <th>MD5</th>
@@ -23,20 +34,138 @@ else
                 <th>StatusDangerous</th>
                 <th>minSdk</th>
                 <th>SecurityScore</th>
+                <th>İndirilebilir mi?</th>
             </tr>
+            
         </thead>
         <tbody>
         @foreach (var res in Model)
         {
+            // TotalMalwarePermission değerlendirmesi
+            string tmpIcon = "";
+            if (res.TotalMalwarePermission < 10)
+            {
+                tmpIcon = "<span class='text-success'><i class='fas fa-check-circle'></i></span>";
+            }
+            else if (res.TotalMalwarePermission < 26)
+            {
+                tmpIcon = "<span class='text-warning'><i class='fas fa-exclamation-circle'></i></span>";
+            }
+            else
+            {
+                tmpIcon = "<span class='text-danger'><i class='fas fa-times-circle'></i></span>";
+            }
+
+            // TotalPermission değerlendirmesi
+            string tpIcon = "";
+            if (res.TotalPermission < 50)
+            {
+                tpIcon = "<span class='text-success'><i class='fas fa-check-circle'></i></span>";
+            }
+            else if (res.TotalPermission < 71)
+            {
+                tpIcon = "<span class='text-warning'><i class='fas fa-exclamation-circle'></i></span>";
+            }
+            else
+            {
+                tpIcon = "<span class='text-danger'><i class='fas fa-times-circle'></i></span>";
+            }
+
+            // SeverityHigh değerlendirmesi
+            string sevIcon = "";
+            if (res.SeverityHigh < 1)
+            {
+                sevIcon = "<span class='text-success'><i class='fas fa-check-circle'></i></span>";
+            }
+            else if (res.SeverityHigh < 2)
+            {
+                sevIcon = "<span class='text-warning'><i class='fas fa-exclamation-circle'></i></span>";
+            }
+            else
+            {
+                sevIcon = "<span class='text-danger'><i class='fas fa-times-circle'></i></span>";
+            }
+
+            // StatusDangerous değerlendirmesi
+            string sdIcon = "";
+            if (res.StatusDangerous < 1)
+            {
+                sdIcon = "<span class='text-success'><i class='fas fa-check-circle'></i></span>";
+            }
+            else if (res.StatusDangerous < 2)
+            {
+                sdIcon = "<span class='text-warning'><i class='fas fa-exclamation-circle'></i></span>";
+            }
+            else
+            {
+                sdIcon = "<span class='text-danger'><i class='fas fa-times-circle'></i></span>";
+            }
+
+            // minSdk değerlendirmesi
+            string msIcon = "";
+            int minSdkVal;
+            if (!int.TryParse(res.minSdk, out minSdkVal))
+            {
+                // Eğer parse edilemezse varsayılan bir değer verelim
+                minSdkVal = 0;
+            }
+            if (minSdkVal > 28)
+            {
+                msIcon = "<span class='text-success'><i class='fas fa-check-circle'></i></span>";
+            }
+            else if (minSdkVal > 23)
+            {
+                msIcon = "<span class='text-warning'><i class='fas fa-exclamation-circle'></i></span>";
+            }
+            else
+            {
+                msIcon = "<span class='text-danger'><i class='fas fa-times-circle'></i></span>";
+            }
+
+            // SecurityScore değerlendirmesi
+            string ssIcon = "";
+            if (res.SecurityScore > 49)
+            {
+                ssIcon = "<span class='text-success'><i class='fas fa-check-circle'></i></span>";
+            }
+            else if (res.SecurityScore > 44)
+            {
+                ssIcon = "<span class='text-warning'><i class='fas fa-exclamation-circle'></i></span>";
+            }
+            else
+            {
+                ssIcon = "<span class='text-danger'><i class='fas fa-times-circle'></i></span>";
+            }
+
+            // İndirmeli mi değerlendirmesi
+            string downloadIcon = "";
+            string downloadText = "";
+            if (res.SecurityScore > 49)
+            {
+                downloadText = "Evet";
+                downloadIcon = "<span class='text-success'><i class='fas fa-check-circle'></i></span>";
+            }
+            else if (res.SecurityScore > 44)
+            {
+                downloadText = "Evet";
+                downloadIcon = "<span class='text-warning'><i class='fas fa-exclamation-circle'></i></span>";
+            }
+            else
+            {
+                downloadText = "Hayır";
+                downloadIcon = "<span class='text-danger'><i class='fas fa-times-circle'></i></span>";
+            }
+
             <tr>
                 <td>@res.File_Name</td>
                 <td>@res.md5</td>
-                <td>@res.TotalMalwarePermission</td>
-                <td>@res.TotalPermission</td>
-                <td>@res.SeverityHigh</td>
-                <td>@res.StatusDangerous</td>
-                <td>@res.minSdk</td>
-                <td>@res.SecurityScore</td>
+                <td>@(res.TotalMalwarePermission) @Html.Raw(tmpIcon)</td>
+                <td>@(res.TotalPermission) @Html.Raw(tpIcon)</td>
+                <td>@(res.SeverityHigh) @Html.Raw(sevIcon)</td>
+                <td>@(res.StatusDangerous) @Html.Raw(sdIcon)</td>
+                <td>@(res.minSdk) @Html.Raw(msIcon)</td>
+                <td>@(res.SecurityScore) @Html.Raw(ssIcon)</td>
+                <td>@downloadText @Html.Raw(downloadIcon)</td>
             </tr>
         }
         </tbody>
