@@ -30,8 +30,10 @@ namespace MobSecLab.Controllers
                 var identity = new ClaimsIdentity(claims, "CookieAuth");
                 var principal = new ClaimsPrincipal(identity);
                 HttpContext.SignInAsync("CookieAuth", principal);
-
-                return RedirectToAction("Dashboard", "Profile");
+                if (user.Role==0)
+                    return RedirectToAction("Dashboard", "Profile");
+                if (user.Role==1)
+                    return RedirectToAction("Index", "Admin");
             }
             ViewBag.Error = "Geçersiz giriş bilgileri!";
             return View();

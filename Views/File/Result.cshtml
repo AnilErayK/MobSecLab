@@ -203,11 +203,11 @@ else if(ViewBag.FileMd5 != null)
                         <td>Ortalama olarak 50'den yüksek olmalıdır</td>
                         <td>
                             @{
-                                if (ViewBag.SecurityScore > 50)
+                                if (ViewBag.SecurityScore > 49)
                                 {
                                     @:<span class="text-success"><i class="fas fa-check-circle"></i></span>
                                 }
-                                else if (ViewBag.SecurityScore > 50)
+                                else if (ViewBag.SecurityScore > 44)
                                 {
                                     @:<span class="text-warning"><i class="fas fa-exclamation-circle"></i></span>
                                 }

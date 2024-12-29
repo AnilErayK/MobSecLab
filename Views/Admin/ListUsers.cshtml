@@ -1,0 +1,33 @@
+@model List<MobSecLab.Models.User>
+@{
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<h2>Üye Listesi</h2>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Kullanıcı No</th>
+            <th>Kullanıcı Adı</th>
+            <th>Admin Mi?</th>
+            <th>İşlem</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach(var user in Model)
+    {
+        <tr>
+            <td>@user.UserNo</td>
+            <td>@user.Username</td>
+            <td>
+                <form asp-action="DeleteUser" method="post" style="display:inline;">
+                    <input type="hidden" name="userNo" value="@user.UserNo" />
+                    <button type="submit" class="btn btn-danger btn-sm">Sil</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<a href="/Admin/CreateUser" class="btn btn-success">Yeni Üye Ekle</a>

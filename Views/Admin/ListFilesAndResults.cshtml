@@ -1,0 +1,44 @@
+@model List<MobSecLab.Models.Results>
+@{
+    Layout = "~/Views/Shared/_ProfileLayout.cshtml";
+}
+
+<h2>Dosya & Sonuçlar</h2>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>ResultsNo</th>
+            <th>Dosya Adı</th>
+            <th>MD5</th>
+            <th>Malware Perm</th>
+            <th>Total Perm</th>
+            <th>SeverityHigh</th>
+            <th>StatusDangerous</th>
+            <th>minSdk</th>
+            <th>SecurityScore</th>
+            <th>İşlem</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach(var item in Model)
+    {
+        <tr>
+            <td>@item.ResultsNo</td>
+            <td>@item.File_Name</td>
+            <td>@item.md5</td>
+            <td>@item.TotalMalwarePermission</td>
+            <td>@item.TotalPermission</td>
+            <td>@item.SeverityHigh</td>
+            <td>@item.StatusDangerous</td>
+            <td>@item.minSdk</td>
+            <td>@item.SecurityScore</td>
+            <td>
+                <form method="post" asp-action="DeleteResult" style="display:inline;">
+                    <input type="hidden" name="resultsNo" value="@item.ResultsNo" />
+                    <button type="submit" class="btn btn-danger btn-sm">Sil</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -25,4 +25,17 @@
             </div>
         </div>
     </div>
+    <!-- Yeni Kart: Dosya Ara -->
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="card-title">Dosya Ara</h5>
+                <p class="card-text">Dosya ismi girerek arama yapabilirsiniz.</p>
+                <form method="get" action="/File/SearchByName">
+                    <input type="text" name="fileName" placeholder="Dosya Adı" class="form-control mb-2" required />
+                    <button type="submit" class="btn btn-info">Ara</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>

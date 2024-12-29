@@ -441,5 +441,46 @@ namespace MobSecLab.Controllers
             return View("ResultsHistory", userResults);
         }
 
+        [HttpGet]
+        public IActionResult SearchByName(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                ViewBag.Error = "Lütfen bir dosya adı girin.";
+                return View("Result"); // veya başka bir hata sayfası
+            }
+
+            // Dosya tablosunda (FileEntity) aranıyor
+            var file = _context.Files.FirstOrDefault(f => f.File_Name == fileName);
+            if (file == null)
+            {
+                ViewBag.Error = $"{fileName} adlı dosya bulunamadı.";
+                return View("Result");
+            }
+
+            // Dosyanın Results kaydı varsa oradan da sonuçları çekebiliriz.
+            // Tekil bulacaksak SingleOrDefault, birden fazla bulacaksak Where kullanın.
+            var result = _context.Results.FirstOrDefault(r => r.File_Name == fileName);
+
+            if (result == null)
+            {
+                ViewBag.Error = $"'{fileName}' adlı dosya var ama sonuç kaydı bulunamadı.";
+                return View("Result");
+            }
+
+            // ViewBag ile Result.cshtml'a verileri gönderelim
+            ViewBag.FileName = result.File_Name;
+            ViewBag.FileMd5 = result.md5;
+            ViewBag.TotalMalware = result.TotalMalwarePermission;
+            ViewBag.TotalPermission = result.TotalPermission;
+            ViewBag.SeverityHigh = result.SeverityHigh;
+            ViewBag.StatusDangerous = result.StatusDangerous;
+            ViewBag.MinSdk = result.minSdk;
+            ViewBag.SecurityScore = result.SecurityScore;
+
+            // Tıpkı tarama sonrası yaptığımız gibi Result.cshtml'ı kullanabiliriz
+            return View("Result");
+        }
+
     }
 }

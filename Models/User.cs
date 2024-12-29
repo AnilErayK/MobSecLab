@@ -10,5 +10,8 @@ namespace MobSecLab.Models
         public string Username { get; set; }
         [Required]
         public string Password { get; set; }
+        
+        // Yeni eklenen alan
+        public int Role { get; set; }
     }
 }
